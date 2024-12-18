@@ -5,6 +5,9 @@ const socialMediaSchema = new mongoose.Schema(
         accessToken: {
             type: String,
         },
+        accessSecret: {
+            type: String,
+        },
         platformName: {
             type: String,
             required: true,
@@ -15,11 +18,9 @@ const socialMediaSchema = new mongoose.Schema(
         },
         socialMediaEmail: {
             type: String,
-            required: true,
         },
         platformUserName: {
             type: String,
-            required: true,
         },
         userId: {
             type: mongoose.Schema.Types.ObjectId,

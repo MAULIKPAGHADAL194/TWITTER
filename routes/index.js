@@ -27,4 +27,7 @@ router.use("/api/v1/analytics", require("./Analytics.js"));
 //! Notification Router
 router.use("/api/v1/notification", require("./Notification.js"));
 
+//! Twitter Router
+router.use("/api/v1/twitter", require("./Twitter.js"));
+
 module.exports = router;

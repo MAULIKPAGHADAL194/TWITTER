@@ -74,7 +74,9 @@ const linkedinlogin = async (req, res) => {
 
 const linkedinGet = async (req, res) => {
   try {
-    const findSocialMediaAccount = await Socialmedia.find();
+    const findSocialMediaAccount = await Socialmedia.find({
+      platformName: "linkedin",
+    });
     res.status(200).json({ success: true, data: findSocialMediaAccount });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

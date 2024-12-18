@@ -9,7 +9,6 @@ const session = require("express-session");
 const errorHandler = require("./middleware/errorHandler.js");
 // const morgan = require("morgan");
 const passport = require("passport");
-const LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
 
 
 dotenv.config(); //? Load environment variables from .env file
@@ -20,6 +19,8 @@ const app = express();
 //! Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(
   session({

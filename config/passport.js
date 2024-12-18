@@ -2,7 +2,7 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
-const LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
+const TwitterStrategy = require('passport-twitter').Strategy;
 
 // Serialize and deserialize user
 passport.serializeUser((user, done) => {
@@ -49,5 +49,21 @@ passport.use(new FacebookStrategy({
 //         return done(null, profile);
 //     }
 // ));
+
+passport.use(new TwitterStrategy({
+    consumerKey: process.env.TWITTERAPIKEY,
+    consumerSecret: process.env.TWITTERAPISECRET,
+    callbackURL: "http://localhost:5000/api/v1/twitter/callback"
+},
+    (accessToken, accessSecret, profile, done) => {
+        console.log("accessToken", accessToken, "accessSecret", accessSecret);
+
+        // Attach tokens to the profile for easy access later
+        profile.accessToken = accessToken;
+        profile.accessSecret = accessSecret;
+
+        return done(null, profile);
+    }
+));
 
 module.exports = passport;
