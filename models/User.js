@@ -9,7 +9,6 @@ const userSchema = new mongoose.Schema(
         email: {
             type: String,
             required: true,
-            unique: true,
         },
         password: {
             type: String,
@@ -23,6 +22,18 @@ const userSchema = new mongoose.Schema(
         },
         resetPasswordToken: {
             type: String,
+        },
+        thirdParty: {
+            provider: {
+                type: String,
+                enum: ['google', 'facebook'],
+            },
+            providerid: {
+                type: String,
+            },
+            sub: {
+                type: String,
+            }
         },
         role: {
             type: String,
