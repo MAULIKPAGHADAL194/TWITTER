@@ -43,8 +43,10 @@ app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"], //? Allow resources from the same origin
-      imgSrc: ["'self'", "https://schedulx-backend.onrender.com", "http://localhost:5173"],  // Allow images from backend
+      imgSrc: ["'self'", "  ", "http://localhost:5173"],  // Allow images from backend
       connectSrc: ["'self'", "https://schedulx-backend.onrender.com", "http://localhost:5173", "ws://localhost:5173"],
+      scriptSrc: ["'self'", "http://localhost:5173"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
     },
   })
 );
@@ -55,8 +57,6 @@ app.use(
 app.use(cors({
   origin: [process.env.FRONTEND_URL],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'] // Specify allowed headers
 }));
 
 //! Rate limiting: Limit each IP to 100 requests per 15 minutes
