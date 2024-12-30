@@ -23,7 +23,7 @@ const twitterAdd = async (req, res) => {
             await findSocialMediaAccount.save();
 
             global.io.emit('notification', {
-                message: `${displayName} has logged in into twitter`,
+                message: `${displayName} has logged in into xtwitter`,
             });
 
             return res.status(200).json({
@@ -46,7 +46,7 @@ const twitterAdd = async (req, res) => {
         await socialmediaAccountAdd.save();
 
         global.io.emit('notification', {
-            message: `${displayName} has logged in into twitter`,
+            message: `${displayName} has logged in into xtwitter`,
         });
 
         // User is already authenticated
@@ -105,9 +105,9 @@ const twitterPost = async (req, res) => {
             // console.log("tweet", tweet);
             const twitterPostAdd = new Post({
                 userId: req.user._id,
-                'platformSpecific.twitter.postId': tweet.data.id,
-                'platformSpecific.twitter.mediaUrls': mediaData ? [mediaData] : [],
-                'platformSpecific.twitter.text': tweetText
+                'platformSpecific.xtwitter.postId': tweet.data.id,
+                'platformSpecific.xtwitter.mediaUrls': mediaData ? [mediaData] : [],
+                'platformSpecific.xtwitter.text': tweetText
             });
 
             await twitterPostAdd.save();
@@ -144,7 +144,7 @@ const twitterDelete = async (req, res) => {
 
         const post = await Post.findOne({
             _id: postId,
-            "platformSpecific.twitter.socialMediaId": socialMediaId,
+            "platformSpecific.xtwitter.socialMediaId": socialMediaId,
             userId: userId
         });
 
@@ -166,7 +166,7 @@ const twitterDelete = async (req, res) => {
                 const updatedPost = await Post.findByIdAndUpdate(
                     postId,
                     {
-                        $unset: { 'platformSpecific.twitter': 1 },
+                        $unset: { 'platformSpecific.xtwitter': 1 },
                     },
                     { new: true }
                 );
@@ -201,7 +201,7 @@ const twitterDelete = async (req, res) => {
                 const updatedPost = await Post.findByIdAndUpdate(
                     postId,
                     {
-                        $unset: { 'platformSpecific.twitter': 1 },
+                        $unset: { 'platformSpecific.xtwitter': 1 },
                     },
                     { new: true }
                 );
@@ -304,7 +304,7 @@ const twitterUpdate = async (req, res) => {
         const updatedPost = await Post.findOneAndUpdate(
             {
                 platformSpecific: {
-                    twitter: {
+                    xtwitter: {
                         socialMediaId: findSocialMediaAccount._id,
                     }
                 },
@@ -313,13 +313,13 @@ const twitterUpdate = async (req, res) => {
                 status: 'draft',
             },
             {
-                'platformSpecific.twitter.status': status,
-                'platformSpecific.twitter.mediaUrls': mediaUrls,
-                'platformSpecific.twitter.text': text,
-                'platformSpecific.twitter.firstComment': firstComment,
-                'platformSpecific.twitter.hashtags': hashtags,
-                'platformSpecific.twitter.scheduledTime': scheduledTime,
-                'platformSpecific.twitter.isThread': isThread,
+                'platformSpecific.xtwitter.status': status,
+                'platformSpecific.xtwitter.mediaUrls': mediaUrls,
+                'platformSpecific.xtwitter.text': text,
+                'platformSpecific.xtwitter.firstComment': firstComment,
+                'platformSpecific.xtwitter.hashtags': hashtags,
+                'platformSpecific.xtwitter.scheduledTime': scheduledTime,
+                'platformSpecific.xtwitter.isThread': isThread,
             },
             { new: true }
         );

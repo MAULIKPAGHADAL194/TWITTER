@@ -125,7 +125,7 @@ const postSchema = new mongoose.Schema(
         },
         platformSpecific: {
             instagram: instagramSchema,
-            twitter: twitterSchema,
+            xtwitter: twitterSchema,
             pinterest: pinterestSchema,
             linkedin: linkedinSchema,
         },

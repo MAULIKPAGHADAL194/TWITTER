@@ -24,12 +24,13 @@ const PostAdd = async (req, res) => {
         }
 
         // Validate media files
-        const platforms = ['instagram', 'twitter', 'pinterest', 'linkedin'];
+        const platforms = ['instagram', 'xtwitter', 'pinterest', 'linkedin'];
         for (const platform of platforms) {
             if (platformSpecific?.[platform]?.mediaUrls) {
                 const mediaUrls = platformSpecific[platform].mediaUrls;
                 for (const mediaUrl of mediaUrls) {
-                    const filePath = path.join(__dirname, '../uploads', mediaUrl);
+                    const cleanMediaUrl = mediaUrl.replace(/^uploads[\/\\]/, '');
+                    const filePath = path.join(__dirname, '../uploads', cleanMediaUrl);
                     const exists = await checkFileExists(filePath);
                     if (!exists) {
                         return res.status(400).json({
@@ -80,7 +81,7 @@ const PostsGet = async (req, res) => {
         const allPosts = await Post.find({
             ...filter,
             $or: findUserSocialMediaAccount.map(account => ({
-                [`platformSpecific.${account.platformName.toLowerCase() === 'xtwitter' ? 'twitter' : account.platformName.toLowerCase()}.socialMediaId`]: account._id
+                [`platformSpecific.${account.platformName.toLowerCase() === 'xtwitter' ? 'xtwitter' : account.platformName.toLowerCase()}.socialMediaId`]: account._id
             }))
         }).select('-createdAt -updatedAt -__v -lastModifiedBy');
 
@@ -187,12 +188,12 @@ const PostUpdate = async (req, res) => {
                 'platformSpecific.instagram.location': req.body.platformSpecific?.instagram?.location,
                 'platformSpecific.instagram.stickers': req.body.platformSpecific?.instagram?.stickers,
                 'platformSpecific.instagram.firstComment': req.body.platformSpecific?.instagram?.firstComment,
-                'platformSpecific.twitter.text': req.body.platformSpecific?.twitter?.text,
-                'platformSpecific.twitter.hashtags': req.body.platformSpecific?.twitter?.hashtags,
-                'platformSpecific.twitter.mentions': req.body.platformSpecific?.twitter?.mentions,
-                'platformSpecific.twitter.mediaUrls': req.body.platformSpecific?.twitter?.mediaUrls,
-                'platformSpecific.twitter.isThread': req.body.platformSpecific?.twitter?.isThread,
-                'platformSpecific.twitter.firstComment': req.body.platformSpecific?.twitter?.firstComment,
+                'platformSpecific.xtwitter.text': req.body.platformSpecific?.xtwitter?.text,
+                'platformSpecific.xtwitter.hashtags': req.body.platformSpecific?.xtwitter?.hashtags,
+                'platformSpecific.xtwitter.mentions': req.body.platformSpecific?.xtwitter?.mentions,
+                'platformSpecific.xtwitter.mediaUrls': req.body.platformSpecific?.xtwitter?.mediaUrls,
+                'platformSpecific.xtwitter.isThread': req.body.platformSpecific?.xtwitter?.isThread,
+                'platformSpecific.xtwitter.firstComment': req.body.platformSpecific?.xtwitter?.firstComment,
                 'platformSpecific.pinterest.title': req.body.platformSpecific?.pinterest?.title,
                 'platformSpecific.pinterest.description': req.body.platformSpecific?.pinterest?.description,
                 'platformSpecific.pinterest.mediaUrls': req.body.platformSpecific?.pinterest?.mediaUrls,

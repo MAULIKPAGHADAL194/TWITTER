@@ -1,4 +1,4 @@
-const { Post, SocialMedia, Analytics } = require("../models/index.js");
+const { Post, SocialMedia, Analytics, User } = require("../models/index.js");
 const cron = require("node-cron");
 const { TwitterApi } = require('twitter-api-v2');
 const fs = require('fs').promises;
@@ -56,7 +56,7 @@ cron.schedule('*/1 * * * *', async () => {
                     const socialMediaAccounts = await SocialMedia.find({
                         $or: [
                             ...(post.platformSpecific.instagram?.socialMediaId ? [{ _id: post.platformSpecific.instagram.socialMediaId }] : []),
-                            ...(post.platformSpecific.twitter?.socialMediaId ? [{ _id: post.platformSpecific.twitter.socialMediaId }] : []),
+                            ...(post.platformSpecific.xtwitter?.socialMediaId ? [{ _id: post.platformSpecific.xtwitter.socialMediaId }] : []),
                             ...(post.platformSpecific.pinterest?.socialMediaId ? [{ _id: post.platformSpecific.pinterest.socialMediaId }] : []),
                             ...(post.platformSpecific.linkedin?.socialMediaId ? [{ _id: post.platformSpecific.linkedin.socialMediaId }] : [])
                         ]
@@ -72,15 +72,15 @@ cron.schedule('*/1 * * * *', async () => {
                         // console.log("Processing social media:", {
                         //     platform: socialMedia.platformName,
                         //     accountId: socialMedia._id.toString(),
-                        //     postPlatformId: post.platformSpecific.twitter?.socialMediaId?.toString()
+                        //     postPlatformId: post.platformSpecific.xtwitter?.socialMediaId?.toString()
                         // });
 
                         switch (socialMedia.platformName.toLowerCase()) {
                             case 'xtwitter':
-                                if (post.platformSpecific.twitter?.socialMediaId?.toString() === socialMedia._id.toString()) {
+                                if (post.platformSpecific.xtwitter?.socialMediaId?.toString() === socialMedia._id.toString()) {
                                     console.log("Calling processTwitterPost");
-                                    // platformPromises.push(processTwitterPost(post, socialMedia));
-                                    processTwitterPost(post, socialMedia);
+                                    platformPromises.push(processTwitterPost(post, socialMedia));
+                                    // processTwitterPost(post, socialMedia);
                                 }
                                 break;
                             case 'linkedin':
@@ -131,8 +131,8 @@ async function processTwitterPost(post, socialMedia) {
 
         let mediaData;
         let cloudinaryUrl;
-        if (post.platformSpecific.twitter?.mediaUrls && post.platformSpecific.twitter.mediaUrls.length > 0) {
-            const mediaPath = post.platformSpecific.twitter.mediaUrls[0];
+        if (post.platformSpecific.xtwitter?.mediaUrls && post.platformSpecific.xtwitter.mediaUrls.length > 0) {
+            const mediaPath = post.platformSpecific.xtwitter.mediaUrls[0];
             const mediaFileBuffer = await fs.readFile(mediaPath);
 
             const cloudinaryResult = await new Promise((resolve, reject) => {
@@ -164,9 +164,18 @@ async function processTwitterPost(post, socialMedia) {
             });
         }
 
+        const hashtags = post.platformSpecific.xtwitter.hashtags || [];
+        const hashtagText = hashtags.map((tag) => `#${tag}`).join(' ');
+
+        const mentions = post.platformSpecific.xtwitter.mentions || [];
+        const mentionText = mentions.map((mention) => `@${mention}`).join(' ');
+
         // Create the tweet payload
+        // const tweetData = {
+        //     text: post.platformSpecific.xtwitter.text,
+        // };
         const tweetData = {
-            text: post.platformSpecific.twitter.text,
+            text: `${post.platformSpecific.xtwitter.text} ${hashtagText} ${mentionText}`.trim(),
         };
 
         if (mediaData) {
@@ -177,9 +186,9 @@ async function processTwitterPost(post, socialMedia) {
         const tweet = await client.v2.tweet(tweetData);
 
         // Handle first comment if present
-        if (post.platformSpecific.twitter.firstComment && tweet.data.id) {
+        if (post.platformSpecific.xtwitter.firstComment && tweet.data.id) {
             await client.v2.tweet({
-                text: post.platformSpecific.twitter.firstComment,
+                text: post.platformSpecific.xtwitter.firstComment,
                 reply: {
                     in_reply_to_tweet_id: tweet.data.id
                 }
@@ -190,9 +199,11 @@ async function processTwitterPost(post, socialMedia) {
             const twitterPostAdd = await Post.findByIdAndUpdate(post._id, {
                 status: 'posted',
                 lastModifiedBy: post.createdBy,
-                'platformSpecific.twitter.postId': tweet.data.id,
-                'platformSpecific.twitter.mediaUrls': cloudinaryUrl ? [cloudinaryUrl] : [],
-                'platformSpecific.twitter.text': post.platformSpecific.twitter.text
+                'platformSpecific.xtwitter.postId': tweet.data.id,
+                'platformSpecific.xtwitter.mediaUrls': cloudinaryUrl ? [cloudinaryUrl] : [],
+                'platformSpecific.xtwitter.text': post.platformSpecific.xtwitter.text,
+                'platformSpecific.xtwitter.hashtags': hashtags,
+                'platformSpecific.xtwitter.mentions': mentions
             }, { new: true });
 
             if (!twitterPostAdd) {
@@ -203,7 +214,7 @@ async function processTwitterPost(post, socialMedia) {
                 postId: twitterPostAdd._id,
                 socialMediaId: socialMedia._id,
                 userId: post.userId,
-                platformSpecificPostId: twitterPostAdd.platformSpecific.twitter._id,
+                platformSpecificPostId: twitterPostAdd.platformSpecific.xtwitter._id,
             });
 
             console.log({ success: true, data: twitterPostAdd });
@@ -212,9 +223,9 @@ async function processTwitterPost(post, socialMedia) {
         }
 
     } catch (error) {
-        if (post.platformSpecific.twitter?.mediaUrls?.[0]) {
+        if (post.platformSpecific.xtwitter?.mediaUrls?.[0]) {
             try {
-                await fs.unlink(post.platformSpecific.twitter.mediaUrls[0]);
+                await fs.unlink(post.platformSpecific.xtwitter.mediaUrls[0]);
             } catch (unlinkError) {
                 console.error('Error deleting local file:', unlinkError);
             }
@@ -373,17 +384,17 @@ cron.schedule('*/15 * * * *', async () => {
 
         const posts = await Post.find({
             status: 'posted',
-            'platformSpecific.twitter.postId': { $exists: true }
+            'platformSpecific.xtwitter.postId': { $exists: true }
         });
 
         // Group posts by socialMediaId
         const postsBySocialMedia = {};
         for (const post of posts) {
-            if (post.platformSpecific.twitter.socialMediaId) {
-                if (!postsBySocialMedia[post.platformSpecific.twitter.socialMediaId]) {
-                    postsBySocialMedia[post.platformSpecific.twitter.socialMediaId] = [];
+            if (post.platformSpecific.xtwitter.socialMediaId) {
+                if (!postsBySocialMedia[post.platformSpecific.xtwitter.socialMediaId]) {
+                    postsBySocialMedia[post.platformSpecific.xtwitter.socialMediaId] = [];
                 }
-                postsBySocialMedia[post.platformSpecific.twitter.socialMediaId].push(post);
+                postsBySocialMedia[post.platformSpecific.xtwitter.socialMediaId].push(post);
             }
         }
 
@@ -427,12 +438,46 @@ async function twitterAnalytics(posts, socialMedia) {
         //     "tweet.fields": ["public_metrics", "created_at"]
         // });
 
+        const userDetails = await twitterClient.v2.user(socialMedia.socialMediaID, {
+            "user.fields": ["public_metrics", "description", "created_at", "profile_image_url", "location"]
+        });
+
+        if (userDetails.data) {
+            // Log user details
+            console.log("User Details:", {
+                username: userDetails.data.username,
+                metrics: {
+                    followers: userDetails.data.public_metrics.followers_count,
+                    following: userDetails.data.public_metrics.following_count,
+                    tweets: userDetails.data.public_metrics.tweet_count,
+                    listed: userDetails.data.public_metrics.listed_count
+                },
+                profileImage: userDetails.data.profile_image_url,
+                location: userDetails.data.location,
+                createdAt: userDetails.data.created_at
+            });
+
+            await User.findByIdAndUpdate(socialMedia.userId, {
+                twitter: {
+                    followers: userDetails.data.public_metrics.followers_count,
+                    following: userDetails.data.public_metrics.following_count,
+                    tweets: userDetails.data.public_metrics.tweet_count,
+                    listed: userDetails.data.public_metrics.listed_count,
+                    profileImage: userDetails.data.profile_image_url,
+                    location: userDetails.data.location,
+                    createdAt: userDetails.data.created_at
+                }
+            });
+        }
+
         // console.log(`[${getCurrentISTTime()}] Fetching user timeline...`);
         const allTweets = await twitterClient.v2.userTimeline(socialMedia.socialMediaID, {
             max_results: 100,
             "tweet.fields": ["public_metrics", "created_at"],
             exclude: ['retweets', 'replies']
         });
+
+        console.log("allTweets", allTweets.data.data);
         // console.log(`[${getCurrentISTTime()}] Successfully fetched ${allTweets.data.data.length} tweets`);
 
 
@@ -459,40 +504,72 @@ async function twitterAnalytics(posts, socialMedia) {
         //     allTweets: JSON.stringify(allTweetsAnalytics)
         // });
 
-        for (const tweetData of allTweetsAnalytics) {
-            if (tweetData) {
-                // console.log("tweetData", tweetData);
-                const metrics = tweetData.metrics;
+        // Match tweets with posts and update analytics
+        for (const post of posts) {
+            // Find matching tweet for this post
+            const matchingTweet = allTweetsAnalytics.find(tweet =>
+                tweet.tweetId === post.platformSpecific?.xtwitter?.postId
+            );
+
+            if (matchingTweet) {
+                const metrics = matchingTweet.metrics;
                 const totalEngagements = metrics.likes + metrics.replies +
                     metrics.retweets + metrics.quotes;
-                for (const post of posts) {
-                    const existingAnalytics = await Analytics.findOne({
-                        postId: post._id,
-                    });
 
-                    let analyticsData;
-                    if (existingAnalytics) {
-                        // Update existing analytics
-                        analyticsData = await Analytics.findByIdAndUpdate(
-                            existingAnalytics._id,
-                            {
-                                like: metrics.likes,
-                                comment: metrics.replies,
-                                share: metrics.retweets,
-                                impressions: metrics.impressions,
-                                engagements: totalEngagements
-                            },
-                            { new: true }
-                        );
-                    }
+                const existingAnalytics = await Analytics.findOne({
+                    postId: post._id,
+                });
 
-                    console.log({
-                        success: true,
-                        data: analyticsData
-                    });
+                if (existingAnalytics) {
+                    await Analytics.findByIdAndUpdate(
+                        existingAnalytics._id,
+                        {
+                            like: metrics.likes,
+                            comment: metrics.replies,
+                            share: metrics.retweets,
+                            impressions: metrics.impressions,
+                            engagements: totalEngagements
+                        },
+                        { new: true }
+                    );
                 }
             }
         }
+
+        // for (const tweetData of allTweetsAnalytics) {
+        //     if (tweetData) {
+        //         // console.log("tweetData", tweetData);
+        //         const metrics = tweetData.metrics;
+        //         const totalEngagements = metrics.likes + metrics.replies +
+        //             metrics.retweets + metrics.quotes;
+        //         for (const post of posts) {
+        //             const existingAnalytics = await Analytics.findOne({
+        //                 postId: post._id,
+        //             });
+
+        //             let analyticsData;
+        //             if (existingAnalytics) {
+        //                 // Update existing analytics
+        //                 analyticsData = await Analytics.findByIdAndUpdate(
+        //                     existingAnalytics._id,
+        //                     {
+        //                         like: metrics.likes,
+        //                         comment: metrics.replies,
+        //                         share: metrics.retweets,
+        //                         impressions: metrics.impressions,
+        //                         engagements: totalEngagements
+        //                     },
+        //                     { new: true }
+        //                 );
+        //             }
+
+        //             // console.log({
+        //             //     success: true,
+        //             //     data: analyticsData
+        //             // });
+        //         }
+        //     }
+        // }
     } catch (error) {
         console.error(`[${getCurrentISTTime()}] Error handling analytics:`, error.message);
     }

@@ -64,7 +64,7 @@ const UserGet = async (req, res) => {
     const allPosts = await Post.find({
       userId: id,
       $or: findUserSocialMediaAccount.map(account => ({
-        [`platformSpecific.${account.platformName.toLowerCase() === 'xtwitter' ? 'twitter' : account.platformName.toLowerCase()}.socialMediaId`]: account._id
+        [`platformSpecific.${account.platformName.toLowerCase() === 'xtwitter' ? 'xtwitter' : account.platformName.toLowerCase()}.socialMediaId`]: account._id
       }))
     }).select('-createdAt -updatedAt -__v -lastModifiedBy');
 

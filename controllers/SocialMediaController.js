@@ -4,7 +4,7 @@ const SocialmediaGets = async (req, res) => {
     try {
         const { filter } = req.query;
 
-        const findSocialMedia = await SocialMedia.find().select('-createdBy -updatedAt -__v -lastModifiedBy -accessToken -accessSecret');
+        const findSocialMedia = await SocialMedia.find({ userId: req.user._id }).select('-createdBy -updatedAt -__v -lastModifiedBy -accessToken -accessSecret');
 
         const includePosts = filter === 'posts';
 
@@ -15,7 +15,7 @@ const SocialmediaGets = async (req, res) => {
                     const findPosts = await Post.find({
                         $or: [
                             { 'platformSpecific.instagram.socialMediaId': item._id },
-                            { 'platformSpecific.twitter.socialMediaId': item._id },
+                            { 'platformSpecific.xtwitter.socialMediaId': item._id },
                             { 'platformSpecific.pinterest.socialMediaId': item._id },
                             { 'platformSpecific.linkedin.socialMediaId': item._id }
                         ]
@@ -62,7 +62,7 @@ const SocialmediaGet = async (req, res) => {
             const findPosts = await Post.find({
                 $or: [
                     { 'platformSpecific.instagram.socialMediaId': findSocialMedia._id },
-                    { 'platformSpecific.twitter.socialMediaId': findSocialMedia._id },
+                    { 'platformSpecific.xtwitter.socialMediaId': findSocialMedia._id },
                     { 'platformSpecific.pinterest.socialMediaId': findSocialMedia._id },
                     { 'platformSpecific.linkedin.socialMediaId': findSocialMedia._id }
                 ]
@@ -95,7 +95,7 @@ const SocialmediaDelete = async (req, res) => {
         const data = await Post.find(
             {
                 $or: [
-                    { "platformSpecific.twitter.socialMediaId": objectId },
+                    { "platformSpecific.xtwitter.socialMediaId": objectId },
                     { "platformSpecific.pinterest.socialMediaId": objectId },
                     { "platformSpecific.linkedin.socialMediaId": objectId }
                 ]
@@ -107,7 +107,7 @@ const SocialmediaDelete = async (req, res) => {
         const deletepost = await Post.deleteMany(
             {
                 $or: [
-                    { "platformSpecific.twitter.socialMediaId": objectId },
+                    { "platformSpecific.xtwitter.socialMediaId": objectId },
                     { "platformSpecific.pinterest.socialMediaId": objectId },
                     { "platformSpecific.linkedin.socialMediaId": objectId }
                 ]

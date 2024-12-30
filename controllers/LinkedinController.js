@@ -67,7 +67,7 @@ const linkedinlogin = async (req, res) => {
     const tokenResponse = await axios.post('https://www.linkedin.com/oauth/v2/accessToken', qs.stringify({
       grant_type: 'authorization_code',
       code: req.query.code,
-      redirect_uri: 'http://localhost:5000/api/v1/linkedin/callback',
+      redirect_uri: 'https://schedulx-backend.onrender.com/api/v1/linkedin/callback',
       client_id: process.env.LINKEDINCLINTID,
       client_secret: process.env.LINKEDINCLINTSECRET
     }), {
@@ -327,7 +327,7 @@ const linkedinPostDelete = async (req, res) => {
 
       await axios.delete(`${process.env.LINKEDINAPI_BASE_URL}/ugcPosts/${postId}`, { headers });
 
-      if (post.platformSpecific.twitter || post.platformSpecific.facebook || post.platformSpecific.instagram || post.platformSpecific.pinterest) {
+      if (post.platformSpecific.xtwitter || post.platformSpecific.facebook || post.platformSpecific.instagram || post.platformSpecific.pinterest) {
         // Update post to remove Twitter data while keeping other platforms
         const updatedPost = await Post.findByIdAndUpdate(
           postId,
@@ -362,7 +362,7 @@ const linkedinPostDelete = async (req, res) => {
     }
 
     if (post.status === 'draft') {
-      if (post.platformSpecific.twitter || post.platformSpecific.facebook || post.platformSpecific.instagram || post.platformSpecific.pinterest) {
+      if (post.platformSpecific.xtwitter || post.platformSpecific.facebook || post.platformSpecific.instagram || post.platformSpecific.pinterest) {
         // Update post to remove Twitter data while keeping other platforms
         const updatedPost = await Post.findByIdAndUpdate(
           postId,

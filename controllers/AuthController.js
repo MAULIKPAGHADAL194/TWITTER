@@ -20,7 +20,7 @@ const login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "password Dose not match" });
     }
-
+    console.log("findUser", findUser);
     const user = {
       _id: findUser._id,
       name: findUser.name,

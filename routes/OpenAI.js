@@ -15,7 +15,13 @@ router.post('/generate-response', authMiddleware, AddOpenAiValidation, async (re
 
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: `Rewrite the corrected sentence in a more creative and engaging way while preserving its original meaning: ${input}` }],
+            messages: [{
+                role: "user", content: `
+                        Generate a creative social media post.
+                        Input: ${input}.
+                        Content Type: ${"General"}.
+                        Ensure the post is engaging and aligns with the specified tone or platform.
+                    ` }],
         });
 
         res.json({ responseData: response.choices[0]?.message?.content || "" });
